@@ -463,15 +463,19 @@ const DebugSection = () => {
                 }
             }
 
-            const rawGT = selectedTestcase?.["testcase"]?.[groundTruthKey]
+            const hasValidGroundTruthKey =
+                typeof groundTruthKey === "string" && groundTruthKey.trim().length > 0
+
+            const rawGT = hasValidGroundTruthKey
+                ? selectedTestcase?.["testcase"]?.[groundTruthKey]
+                : undefined
             const ground_truth = normalizeCompact(rawGT)
             const prediction = normalizeCompact(variantResult)
 
             outputs = {
                 ...outputs,
                 ...selectedTestcase.testcase,
-                ground_truth,
-                [groundTruthKey]: ground_truth,
+                ...(hasValidGroundTruthKey ? {ground_truth, [groundTruthKey]: ground_truth} : {}),
                 prediction,
                 ...(selectedEvaluator.key === "auto_custom_code_run" ? {app_config: {}} : {}),
             }
