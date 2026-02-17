@@ -251,16 +251,23 @@ class MetersService:
                                 continue
 
                             payload = {"delta": delta, "customer_id": customer_id}
+                            event_identifier = (
+                                f"{meter.organization_id}:"
+                                f"{meter.key.value}:"
+                                f"{meter.year}:{meter.month}:"
+                                f"{meter.synced}"
+                            )
 
                             log.info(
                                 f"[stripe] counter-event attempt: job={job_id} "
                                 f"org={meter.organization_id} key={meter.key} "
                                 f"period={meter.year}-{meter.month} synced={meter.synced} value={meter.value} delta={delta} "
-                                f"event={event_name} customer={customer_id}"
+                                f"event={event_name} customer={customer_id} identifier={event_identifier}"
                             )
                             stripe.billing.MeterEvent.create(
                                 event_name=event_name,
                                 payload=payload,
+                                identifier=event_identifier,
                             )
 
                             reported_count += 1
@@ -269,7 +276,7 @@ class MetersService:
                                 f"[stripe] counter-event success: job={job_id} "
                                 f"org={meter.organization_id} key={meter.key} "
                                 f"period={meter.year}-{meter.month} synced={meter.synced} value={meter.value} delta={delta} "
-                                f"event={event_name} customer={customer_id}"
+                                f"event={event_name} customer={customer_id} identifier={event_identifier}"
                             )
                             log.info(
                                 f"[stripe] reporting: {meter.organization_id} | {(('0' if (meter.month != 0 and meter.month < 10) else '') + str(meter.month)) if meter.month != 0 else '  '}.{meter.year if meter.year else '    '} | {'sync ' if meter.key.value in REPORTS else '     '} | {meter.key}: {meter.value - meter.synced}"
@@ -282,7 +289,7 @@ class MetersService:
                                 f"[report] Error creating meter event for "
                                 f"job={job_id} org={meter.organization_id} key={meter.key} "
                                 f"period={meter.year}-{meter.month} synced={meter.synced} value={meter.value} delta={delta} "
-                                f"event={event_name} customer={customer_id}",
+                                f"event={event_name} customer={customer_id} identifier={event_identifier}",
                                 exc_info=True,
                             )
                             error_count += 1
